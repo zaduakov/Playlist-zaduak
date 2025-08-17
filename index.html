@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<title>Mini Music Player</title>
+<style>
+  body { background: #151522; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+  .music-player { text-align: center; width: 320px; }
+  .song-img { width: 250px; height: 250px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; }
+  .controls { display: flex; justify-content: center; gap: 20px; margin-top: 10px; }
+  .controls div { cursor: pointer; font-size: 24px; }
+  #progress, #volume { width: 100%; margin: 10px 0; }
+  .song-list { margin-top: 20px; display: flex; flex-direction: column; gap: 5px; }
+  .song-item { cursor: pointer; padding: 5px; border-radius: 5px; }
+  .song-item.active { color: #7c5cff; font-weight: bold; background: rgba(124, 92, 255, 0.2); }
+</style>
+</head>
+<body>
+
+<div class="music-player">
+  <img src="" class="song-img" id="songImg">
+  <h1 id="songTitle">Song Title</h1>
+  <p id="songArtist">Artist</p>
+
+  <audio id="song"></audio>
+  <input type="range" id="progress" value="0" min="0" step="0.1">
+  <input type="range" id="volume" value="1" min="0" max="1" step="0.01">
+
+  <div class="controls">
+    <div id="prev"><i class="fa-solid fa-backward"></i></div>
+    <div id="playPause"><i class="fa-solid fa-play" id="ctrlIcon"></i></div>
+    <div id="next"><i class="fa-solid fa-forward"></i></div>
+  </div>
+
+  <div class="song-list" id="songList"></div>
+</div>
+
+<script>
+const songs = [
+  { name: "Bedelen", artist: "Verzetsstrijder", file: "media/Verzetsstrijder - Bedelen.mp3", img: "media/df87ec8840d3b6c72cdbc3e0b9eb1222.jpg" },
+  { name: "Темный принц", artist: "Гной", file: "media/тёмный принц - гной.mp3", img: "media/22e5b9d46527aec1bee62532aa6afa25.jpg" },
+  { name: "No, The Moon", artist: "Teen Suicide", file: "media/teen suicide - no, the moon.mp3", img: "media/65c3aa1d18e09eb1c525cc8ecf5e6ab2.jpg" },
+  { name: "Хочу по быть один", artist: "Комнатный", file: "media/Комнатный - хочу побыть один (p. seicun)", img: "1dca05ae4a33081de80eb8b7953fed77.jpg" }
+];
+
+let songIndex = 0;
+const song = document.getElementById("song");
+const progress = document.getElementById("progress");
+const volume = document.getElementById("volume");
+const ctrlIcon = document.getElementById("ctrlIcon");
+const songTitle = document.getElementById("songTitle");
+const songArtist = document.getElementById("songArtist");
+const songImg = document.getElementById("songImg");
+const songListEl = document.getElementById("songList");
+
+// Генерируем список песен
+songs.forEach((s, i) => {
+  const div = document.createElement("div");
+  div.textContent = s.name;
+  div.classList.add("song-item");
+  if(i === songIndex) div.classList.add("active");
+  div.addEventListener("click", () => {
+    songIndex = i;
+    loadSong(songIndex);
+    song.play();
+    updatePlayPauseIcon();
+  });
+  songListEl.appendChild(div);
+});
+
+function updateActiveSong() {
+  document.querySelectorAll(".song-item").forEach((el, i) => {
+    el.classList.toggle("active", i === songIndex);
+  });
+}
+
+function loadSong(index){
+    song.src = songs[index].file;
+    songTitle.textContent = songs[index].name;
+    songArtist.textContent = songs[index].artist;
+    songImg.src = songs[index].img;
+    song.currentTime = 0;
+    progress.value = 0;
+    updateActiveSong();
+    updatePlayPauseIcon();
+}
+
+function playPause(){
+    if(song.paused){
+        song.play();
+    } else {
+        song.pause();
+    }
+    updatePlayPauseIcon();
+}
+
+function updatePlayPauseIcon(){
+    if(song.paused){
+        ctrlIcon.classList.remove("fa-pause");
+        ctrlIcon.classList.add("fa-play");
+    } else {
+        ctrlIcon.classList.remove("fa-play");
+        ctrlIcon.classList.add("fa-pause");
+    }
+}
+
+function nextSong(){
+    songIndex = (songIndex + 1) % songs.length;
+    loadSong(songIndex);
+    song.play();
+    updatePlayPauseIcon();
+}
+
+function prevSong(){
+    songIndex = (songIndex - 1 + songs.length) % songs.length;
+    loadSong(songIndex);
+    song.play();
+    updatePlayPauseIcon();
+}
+
+// Обновление прогресса
+song.ontimeupdate = function(){
+    progress.max = song.duration || 0;
+    progress.value = song.currentTime;
+}
+
+// Перемотка
+progress.addEventListener("input", function(){
+    song.currentTime = progress.value;
+});
+
+// Громкость
+volume.addEventListener("input", function(){
+    song.volume = volume.value;
+});
+
+// Кнопки
+document.getElementById("playPause").addEventListener("click", playPause);
+document.getElementById("next").addEventListener("click", nextSong);
+document.getElementById("prev").addEventListener("click", prevSong);
+
+// Авто-переход
+song.addEventListener("ended", nextSong);
+
+// Инициализация
+window.onload = function(){
+    loadSong(songIndex);
+};
+</script>
+
+</body>
+</html>
